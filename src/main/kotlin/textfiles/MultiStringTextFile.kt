@@ -15,7 +15,11 @@ class MultiStringTextFile(initialContents: String) : TextFile {
         get() = blocks.size
 
     override val length: Int
-        get() = TODO("To be implemented.")
+        get() {
+            var size = 0
+            for (block in blocks) size += block.length
+            return size
+        }
 
     init {
         rebalance()
@@ -26,11 +30,36 @@ class MultiStringTextFile(initialContents: String) : TextFile {
      * into blocks of equal size, except that the final block may be shorter.
      */
     fun rebalance() {
-        TODO("To be implemented.")
+        val main = StringBuilder()
+        for (block in blocks) {
+            main.append(block)
+        }
+        blocks.clear()
+        var s = StringBuilder()
+        for (c in main) {
+            s.append(c)
+            if (s.length == BLOCK_SIZE) {
+                blocks.add(s)
+                s = StringBuilder()
+            }
+        }
+        if (s.isNotEmpty()) blocks.add(s)
     }
 
     override fun insertText(offset: Int, toInsert: String) {
-        TODO("To be implemented.")
+        if (offset < 0 || offset > length) throw FileIndexOutOfBoundsException()
+        if (offset == length) {
+            blocks.add(StringBuilder(toInsert))
+            return
+        }
+        var cumulativeIndex = 0
+        for (block in blocks) {
+            if (offset < cumulativeIndex + block.length) {
+                block.insert(offset - cumulativeIndex, toInsert)
+                break
+            }
+            cumulativeIndex += block.length
+        }
     }
 
     override fun deleteText(offset: Int, size: Int) {
@@ -83,4 +112,6 @@ class MultiStringTextFile(initialContents: String) : TextFile {
         }
         blocks = newBlocks
     }
+
+    override fun toString(): String = blocks.joinToString("") { it.toString() }
 }
